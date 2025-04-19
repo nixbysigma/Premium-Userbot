@@ -16,9 +16,13 @@ from PyroUbot import *
 async def _(client, message):
     buttons = BTN.START(message)
     msg = MSG.START(message)
-    await message.reply(msg, reply_markup=InlineKeyboardMarkup(buttons))
 
-
+    await message.reply_photo(
+        photo="https://files.catbox.moe/umjdgr.jpg", 
+        caption=msg, 
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
+    
 @PY.CALLBACK("bahan")
 async def _(client, callback_query):
     user_id = callback_query.from_user.id
