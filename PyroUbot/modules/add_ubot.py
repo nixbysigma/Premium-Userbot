@@ -494,3 +494,22 @@ async def _(client, callback_query):
             BTN.UBOT(ubot._ubot[count].me.id, count)
         ),
     )
+
+@PY.CALLBACK("paginate")
+async def _(client, callback_query):
+    user_id = callback_query.from_user.id
+    total_cmd = len(HELP_COMMANDS)  # Menghitung jumlah total plugin atau perintah
+    SH = await ubot.get_prefix(callback_query.from_user.id)  # Mendapatkan prefix
+
+    # Menampilkan alert dengan kedua informasi (Plugins dan Prefix) dalam satu alert
+    await callback_query.answer(
+        f"Plugins: {total_cmd}\nPrefix: {' '.join(SH)}",
+        show_alert=True
+    )
+
+
+    # Menampilkan alert kedua dengan show_alert=False untuk prefix
+    await callback_query.answer(
+        f"USERBOT REDY",
+        show_alert=False
+    )
