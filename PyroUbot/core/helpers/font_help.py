@@ -2618,22 +2618,19 @@ def paginate_modules(page_n, module_dict, prefix, chat=None):
     modulo_page = page_n % max_num_pages
 
     if len(pairs) > line:
-        pairs = pairs[modulo_page * line : line * (modulo_page + 1)] + [
-            (
-                EqInlineKeyboardButton(
-                    "⳹",
-                    callback_data="{}_prev({})".format(prefix, modulo_page),
-                ),
-                EqInlineKeyboardButton(
-                    "〄",
-                    callback_data="close_user".format(prefix, modulo_page),
-                ),
-                EqInlineKeyboardButton(
-                    "⳼",
-                    callback_data="{}_next({})".format(prefix, modulo_page),
-                ),
-            )
-        ]
+        prev_btn = EqInlineKeyboardButton(
+            "❮",
+            callback_data="ignore_prev" if modulo_page == 0 else "{}_prev({})".format(prefix, modulo_page)
+        )
+        page_info = EqInlineKeyboardButton(
+            f"{modulo_page + 1}/{max_num_pages}",
+            callback_data="paginate"
+        )
+        next_btn = EqInlineKeyboardButton(
+            "❯",
+            callback_data="ignore_next" if modulo_page + 1 >= max_num_pages else "{}_next({})".format(prefix, modulo_page)
+        )
+        nav_row = (prev_btn, page_info, next_btn)
+        pairs = pairs[modulo_page * line : line * (modulo_page + 1)] + [nav_row]
 
     return pairs
-
