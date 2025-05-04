@@ -1,3 +1,5 @@
+ue,
+        )
 import random
 import re
 import os
@@ -12,6 +14,8 @@ import psutil
 from PyroUbot import *
 from datetime import datetime
 from time import time
+from math import ceil
+import re
 
 from pyrogram.raw.functions import Ping
 from pyrogram.types import *
@@ -59,15 +63,14 @@ async def _(client, inline_query):
             uptime = await get_time((time() - start_time))
             psr = await EMO.PASIR(client)
             msg = f"""
-<blockquote>⌬ {bot.me.mention}
-ᚗ status: {status} 
-ᚗ {psr} expired_on: {exp} 
-ᚗ dc_id: {my.me.dc_id}
-ᚗ ping_dc: {ping} ms
-ᚗ peer_users: {users} users
-ᚗ peer_group: {group} group
-ᚗ start_uptime: {uptime}</blockquote>
-        <blockquote><b>ᣃ࿈ ᴜsᴇʀʙᴏᴛ ࿈ᣄ</b></blockquote>
+<blockquote>{bot.me.mention}
+    status: {status} 
+       {psr} expired_on: {exp} 
+        dc_id: {my.me.dc_id}
+        ping_dc: {ping} ms
+        peer_users: {users} users
+        peer_group: {group} group
+        start_uptime: {uptime}</blockquote>
 """
             await client.answer_inline_query(
                 inline_query.id,
@@ -75,7 +78,7 @@ async def _(client, inline_query):
                 results=[
                     (
                         InlineQueryResultArticle(
-                            title="♅",
+                            title="💬",
                             reply_markup=InlineKeyboardMarkup(button),
                             input_message_content=InputTextMessageContent(msg),
                         )
@@ -127,8 +130,12 @@ async def _(client, callback_query):
         return await callback_query.answer("ꜱudah terupdate", True)
     else:
         await callback_query.answer("ꜱedang memproꜱeꜱ update.....", True)
-    os.execl(sys.executable, sys.executable, "-m", "userbot-ᴘʀᴇᴍ")
+    os.execl(sys.executable, sys.executable, "-m", "PyroUbot")
 
+
+
+
+pages = {}  # Simpan halaman terakhir per user
 
 @PY.UBOT("help")
 async def user_help(client, message):
@@ -139,29 +146,30 @@ async def user_help(client, message):
         except Exception as error:
             await message.reply(error)
     else:
-        module = (get_arg(message))
-        if get_arg(message) in HELP_COMMANDS:
+        module = get_arg(message)
+        if module in HELP_COMMANDS:
             prefix = await ubot.get_prefix(client.me.id)
             await message.reply(
-                HELP_COMMANDS[get_arg(message)].__HELP__.format(
-                    next((p) for p in prefix)
-                ),
+                HELP_COMMANDS[module].__HELP__.format(next((p) for p in prefix)),
                 quote=True,
             )
         else:
-            await message.reply(
-                f"<b>⌭ No module found <code>{module}</code></b>"
-            )
+            await message.reply(f"<b>❌ No module found <code>{module}</code></b>")
 
 @PY.INLINE("^user_help")
 async def user_help_inline(client, inline_query):
     SH = await ubot.get_prefix(inline_query.from_user.id)
-    msg = f"<blockquote><b>✮ ᴍᴇɴᴜ ɪɴʟɪɴᴇ <a href=tg://user?id={inline_query.from_user.id}>{inline_query.from_user.first_name} {inline_query.from_user.last_name or ''}</a>\n • Plugins: {len(HELP_COMMANDS)}\n • Prefix: {' '.join(SH)}\n • Owner: @Alwaysunix</b></blockquote>"
-    results = [InlineQueryResultArticle(
-        title="Help Menu!",
-        reply_markup=InlineKeyboardMarkup(paginate_modules(0, HELP_COMMANDS, "help")),
-        input_message_content=InputTextMessageContent(msg),
-    )]
+    msg = (
+        f"<blockquote><b>✣ ᴍᴇɴᴜ ɪɴʟɪɴᴇ <a href=tg://user?id={inline_query.from_user.id}>"
+        f"{inline_query.from_user.first_name} {inline_query.from_user.last_name or ''}</a></blockquote>\n"
+    )
+    results = [
+        InlineQueryResultArticle(
+            title="Help Menu!",
+            reply_markup=InlineKeyboardMarkup(paginate_modules(0, HELP_COMMANDS, "help")),
+            input_message_content=InputTextMessageContent(msg),
+        )
+    ]
     await client.answer_inline_query(inline_query.id, cache_time=60, results=results)
 
 @PY.CALLBACK("^close_user")
@@ -169,47 +177,52 @@ async def close_usernya(client, callback_query):
     unPacked = unpackInlineMessage(callback_query.inline_message_id)
     for x in ubot._ubot:
         if callback_query.from_user.id == int(x.me.id):
-            await x.delete_messages(
-                unPacked.chat_id, unPacked.message_id
-            )
+            await x.delete_messages(unPacked.chat_id, unPacked.message_id)
 
 @PY.CALLBACK("help_(.*?)")
 async def help_callback(client, callback_query):
     mod_match = re.match(r"help_module\((.+?)\)", callback_query.data)
     prev_match = re.match(r"help_prev\((.+?)\)", callback_query.data)
     next_match = re.match(r"help_next\((.+?)\)", callback_query.data)
-    tutup_match = re.match(r"help_tutup\((.+?)\)", callback_query.data)
     back_match = re.match(r"help_back", callback_query.data)
     SH = await ubot.get_prefix(callback_query.from_user.id)
-    top_text = f"<blockquote><b>✮ ᴍᴇɴᴜ ɪɴʟɪɴᴇ <a href=tg://user?id={callback_query.from_user.id}>{callback_query.from_user.first_name} {callback_query.from_user.last_name or ''}</a>\n • Plugins: {len(HELP_COMMANDS)}\n • Prefix: {' '.join(SH)}\n • Owner: @Alwaysunix</b></blockquote>"
+
+    top_text = (
+        f"<b> ∘ ᴜsᴇʀ: <a href=tg://user?id={callback_query.from_user.id}>{callback_query.from_user.first_name} {callback_query.from_user.last_name or ''}</a></b></blockquote>\n"
+    )
 
     if mod_match:
-        module = (mod_match.group(1)).replace(" ", "_")
+        module = mod_match.group(1).replace(" ", "_")
         text = HELP_COMMANDS[module].__HELP__.format(next((p) for p in SH))
-        button = [[InlineKeyboardButton("♅ ʙᴀᴄᴋ ♅", callback_data="help_back")]]
+        button = [[InlineKeyboardButton("⊲ ʙᴀᴄᴋ", callback_data="help_back")]]
         await callback_query.edit_message_text(
-            text=text 
-            + '\n<blockquote><b>ᣃ࿈ ᴜsᴇʀʙᴏᴛ ᴘʀᴇᴍɪᴜᴍ ࿈ᣄ</a> </b></blockquote>',
+            text=text + "\n<blockquote><b>USERBOT 15K/BULAN BY @OwnTelegramX</b></blockquote>",
             reply_markup=InlineKeyboardMarkup(button),
             disable_web_page_preview=True,
         )
+
     elif prev_match:
         curr_page = int(prev_match.group(1))
+        pages[callback_query.from_user.id] = curr_page - 1
         await callback_query.edit_message_text(
             top_text,
             reply_markup=InlineKeyboardMarkup(paginate_modules(curr_page - 1, HELP_COMMANDS, "help")),
             disable_web_page_preview=True,
         )
+
     elif next_match:
         next_page = int(next_match.group(1))
+        pages[callback_query.from_user.id] = next_page + 1
         await callback_query.edit_message_text(
             text=top_text,
             reply_markup=InlineKeyboardMarkup(paginate_modules(next_page + 1, HELP_COMMANDS, "help")),
             disable_web_page_preview=True,
         )
+
     elif back_match:
+        last_page = pages.get(callback_query.from_user.id, 0)
         await callback_query.edit_message_text(
             text=top_text,
-            reply_markup=InlineKeyboardMarkup(paginate_modules(0, HELP_COMMANDS, "help")),
+            reply_markup=InlineKeyboardMarkup(paginate_modules(last_page, HELP_COMMANDS, "help")),
             disable_web_page_preview=True,
         )
